@@ -1,0 +1,10 @@
+metrics:
+  - uri: "mongodb://localhost:27017"
+    collstats: "db1.collection1,db2.collection2"
+    indexstats: "db1.collection1,db2.collection2"
+  - uri: "mongodb://localhost:27017"
+    connections: true
+  - uri: "mongodb://localhost:27017"
+    mem: true
+  - uri: "mongodb://localhost:27017"
+    opcounters: true
