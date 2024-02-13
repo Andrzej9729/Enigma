@@ -1,0 +1,102 @@
+version: '3'
+services:
+
+  mongodb1:
+    container_name: mongodb1
+    image: mongo:7.0.5
+    ports:
+      - "27017:27017"
+    networks:
+      - mongo-network
+    depends_on:
+      - mongodb2
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    volumes:
+      - mongodb1_data:/data/db
+      - ./FileKey:/file.key
+      - ./scripts/rs_init.sh:/scripts/rs_init.sh
+      - ./scripts/init.js:/scripts/init.js
+      - ./scripts/init_db.js:/scripts/init_db.js
+    entrypoint: /bin/bash
+    command: -c "/usr/bin/mongod --bind_ip_all --replSet replika && /bin/bash -c /scripts/rs_init.sh"
+
+  mongodb2:
+    image: mongo:7.0.5
+    container_name: mongodb2
+    ports:
+      - "27018:27017"
+    networks:
+      - mongo-network
+    volumes:
+      - mongodb2_data:/data/db
+    command: "--replSet replika --bind_ip_all"
+
+  mongodb_arbiter:
+    image: mongo:7.0.5
+    container_name: mongodb_arbiter
+    ports:
+      - "27019:27017"
+    networks:
+      - mongo-network
+    volumes:
+      - mongodb_arbiter_data:/data/db
+    command: "--replSet replika --bind_ip_all"
+
+  mongodb_exporter:
+    image: pandry/mongodb-exporter
+    container_name: mongodb_exporter
+    ports:
+      - "9216:9216"
+    networks:
+      - mongo-network
+    volumes:
+      - ./mongodb_exporter.yml:/etc/mongodb_exporter.yml
+
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/data
+
+  grafana:
+    image: grafana/grafana:8.0.6
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - loki
+
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    depends_on:
+      - mongodb1
+      - mongodb2
+      - mongodb_arbiter
+
+networks:
+  mongo-network:
+    driver: bridge
+
+volumes:
+  mongodb1_data:
+  mongodb2_data:
+  mongodb_arbiter_data:
+  loki_data:
+  grafana_data:
+  prometheus_data:
