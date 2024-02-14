@@ -24,7 +24,7 @@ var config = {
 rs.initiate(config);
 EOF
 
-sleep 5
+sleep 20
 
 mongosh < /scripts/init.js
 mongosh < /scripts/init_db.js
