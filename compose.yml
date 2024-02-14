@@ -85,7 +85,7 @@ services:
     ports:
       - "9090:9090"
     networks:
-      - mongo-networks
+      - mongo-network
     volumes:
       - prometheus_data:/prometheus
     command:
