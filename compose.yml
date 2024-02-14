@@ -88,6 +88,7 @@ services:
       - mongo-network
     volumes:
       - prometheus_data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
     depends_on:
